@@ -1,0 +1,9 @@
+.git
+.venv
+web/.venv
+web/data
+**/__pycache__
+*.pyc
+.env
+*.md
+agent-transcripts

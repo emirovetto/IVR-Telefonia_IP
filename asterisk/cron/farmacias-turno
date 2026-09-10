@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=""
+# IVR IP EMI&MAC - 00:05 hora local
+5 0 * * * root /etc/asterisk/farmacias/actualizar_turno.sh >> /var/log/ivr-farmacias.log 2>&1

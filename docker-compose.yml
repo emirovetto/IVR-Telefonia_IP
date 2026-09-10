@@ -1,0 +1,99 @@
+services:
+  asterisk:
+    build:
+      context: .
+      dockerfile: docker/asterisk/Dockerfile
+    container_name: emimac-asterisk
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "10000-10100:10000-10100/udp"
+    volumes:
+      - sounds:/var/lib/asterisk/sounds/es/farmacias
+      - ./asterisk/extensions_farmacias.conf:/etc/asterisk/extensions_farmacias.conf
+    networks:
+      - ivr
+    healthcheck:
+      test: ["CMD", "asterisk", "-rx", "core show version"]
+      interval: 20s
+      timeout: 8s
+      retries: 8
+      start_period: 25s
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    container_name: emimac-web
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
+      IVR_ENV: production
+      IVR_DB: /data/ivr.db
+      IVR_SOUNDS: /var/lib/asterisk/sounds/es/farmacias
+      IVR_DIALPLAN: /etc/asterisk/extensions_farmacias.conf
+      ASTERISK_AMI_HOST: asterisk
+      ASTERISK_AMI_PORT: "5038"
+      ASTERISK_AMI_USER: ${AMI_USER:-ivr}
+      ASTERISK_AMI_SECRET: ${AMI_SECRET:-cambiar-ami}
+    ports:
+      - "8787:8787"
+    volumes:
+      - data:/data
+      - sounds:/var/lib/asterisk/sounds/es/farmacias
+      - ./asterisk/extensions_farmacias.conf:/etc/asterisk/extensions_farmacias.conf
+    depends_on:
+      asterisk:
+        condition: service_healthy
+    networks:
+      - ivr
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8787/login"]
+      interval: 20s
+      timeout: 5s
+      retries: 8
+
+  cron:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    container_name: emimac-cron
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
+      IVR_ENV: production
+      IVR_DB: /data/ivr.db
+      IVR_SOUNDS: /var/lib/asterisk/sounds/es/farmacias
+      ASTERISK_AMI_HOST: asterisk
+      ASTERISK_AMI_PORT: "5038"
+      ASTERISK_AMI_USER: ${AMI_USER:-ivr}
+      ASTERISK_AMI_SECRET: ${AMI_SECRET:-cambiar-ami}
+    command: ["supercronic", "/opt/ivr-farmacias/crontab"]
+    volumes:
+      - data:/data
+      - sounds:/var/lib/asterisk/sounds/es/farmacias
+    depends_on:
+      asterisk:
+        condition: service_healthy
+    networks:
+      - ivr
+
+volumes:
+  sounds:
+  data:
+
+networks:
+  ivr:
+    driver: bridge

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Sistema · {{ system_name }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Central</p>
+    <h2>Sistema</h2>
+  </div>
+</header>
+
+<div class="grid-2">
+  <section class="panel">
+    <h3>Interno del IVR</h3>
+    <p class="meta">Quien marque este número va a escuchar la farmacia de turno. Por defecto <strong>449700</strong>; se puede cambiar acá cuando quieras (no hace falta reinstalar).</p>
+    <form method="post" action="/sistema/extension">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Número
+        <input name="extension" value="{{ extension }}" required pattern="[0-9]+">
+      </label>
+      <button class="btn primary" type="submit">Guardar y recargar dialplan</button>
+    </form>
+    <p class="meta">Contexto <code>farmacia-turno</code>: {% if asterisk_ok %}{{ "cargado" if context_ok else "no aparece en el dialplan" }}{% else %}se verifica en la central{% endif %}</p>
+  </section>
+
+  <section class="panel">
+    <h3>Issabel</h3>
+    <p class="meta">Issabel no recibe el calendario en grupos horarios. Lee el IVR por un destino; el panel decide qué farmacia suena hoy.</p>
+    <p class="chip">Destino personalizado</p>
+    <p><code>farmacia-turno,s,1</code></p>
+    <p class="hint">PBX → Destinos personalizados → destino <code>farmacia-turno,s,1</code>. Después, la ruta de entrada (DID) o una opción del IVR apunta ahí.</p>
+    <p class="hint">Al final del anuncio, si la farmacia de hoy tiene teléfono, el que llama puede marcar <strong>1</strong> y Issabel desvía la llamada (como si un interno marcara ese número).</p>
+    <p class="hint">Grupo horario / condición horaria: solo si querés limitar <strong>cuándo</strong> se ofrece este anuncio (por ejemplo de 20:00 a 08:00). No cargues ahí los días de cada farmacia.</p>
+    <p class="hint">Con Docker: Issabel usa una troncal hacia este Asterisk. Destino Issabel 4 <code>SIP/emimac/s</code> · Issabel 5 <code>PJSIP/s@emimac</code>.</p>
+  </section>
+
+  <section class="panel">
+    <h3>Asterisk</h3>
+    <p class="meta">{{ asterisk_version }}</p>
+    <p class="meta">AstDB <code>farmacias/hoy</code>: <code>{{ astdb or "—" }}</code></p>
+    <p class="meta">ffmpeg: {{ "sí" if ffmpeg else "no" }} · entorno: {{ "producción" if production else "desarrollo" }}</p>
+    <form method="post" action="/hoy/publicar">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn" type="submit">Publicar turno de hoy ahora</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3>Cambiar contraseña</h3>
+    <form method="post" action="/sistema/clave">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Usuario <input value="{{ admin_user }}" disabled></label>
+      <label>Clave actual <input type="password" name="actual" required></label>
+      <label>Clave nueva <input type="password" name="nueva" required minlength="6"></label>
+      <label>Repetir nueva <input type="password" name="repetir" required minlength="6"></label>
+      <button class="btn primary" type="submit">Actualizar clave</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3>Rutas</h3>
+    <ul class="paths">
+      <li>Calendario (fuente de verdad): <code>{{ db_path }}</code></li>
+      <li>Audios: <code>{{ sounds_path }}</code></li>
+    </ul>
+    <p class="hint">A las 00:05 el cron lee esta base (lo que cargaste en Turnos) y actualiza Asterisk. No hace falta publicar a diario. El CSV es solo una exportación opcional desde Turnos.</p>
+  </section>
+</div>
+{% endblock %}

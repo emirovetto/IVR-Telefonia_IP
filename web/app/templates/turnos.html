@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Turnos · {{ system_name }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Cronograma</p>
+    <h2>{{ mes_titulo }}</h2>
+    <p class="meta">{% if vacios %}Faltan {{ vacios }} día{{ 's' if vacios != 1 else '' }}{% else %}El mes está completo{% endif %} · {{ dias_mes }} días. Cargá el mes una vez; cada madrugada se publica solo.</p>
+  </div>
+  <nav class="month-nav">
+    <a class="btn" href="/turnos?mes={{ prev_mes }}">Mes anterior</a>
+    <a class="btn" href="/turnos?mes={{ next_mes }}">Mes siguiente</a>
+  </nav>
+</header>
+
+<div class="toolbar">
+  <form method="post" action="/turnos/completar">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="mes" value="{{ mes_valor }}">
+    <input type="hidden" name="modo" value="vacios">
+    <select name="farmacia_codigo" required>
+      <option value="">Completar vacíos con…</option>
+      {% for f in farmacias %}
+      <option value="{{ f.codigo }}">{{ f.nombre }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" type="submit">Aplicar a vacíos</button>
+  </form>
+  <form method="post" action="/turnos/rotar" onsubmit="return confirm('¿Rotar las farmacias en los días vacíos de este mes?')">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="mes" value="{{ mes_valor }}">
+    <input type="hidden" name="modo" value="vacios">
+    <button class="btn" type="submit">Rotar en vacíos</button>
+  </form>
+  <form method="post" action="/turnos/importar" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="btn file">
+      Importar CSV
+      <input type="file" name="archivo" accept=".csv,text/csv" onchange="this.form.submit()">
+    </label>
+  </form>
+  <a class="btn" href="/turnos/exportar.csv">Exportar CSV</a>
+</div>
+
+{% if not farmacias %}
+<p class="banner warn">No hay farmacias. <a href="/farmacias">Cargá al menos una</a> antes de armar el mes.</p>
+{% endif %}
+
+{% if farmacias %}
+<ul class="legend">
+  {% for f in farmacias %}
+  <li class="legend-item">
+    <span class="swatch" style="background: {{ f.color }}"></span>
+    {{ f.nombre }}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<div class="cal-head">
+  {% for d in dias %}<span>{{ d }}</span>{% endfor %}
+</div>
+<div class="cal">
+  {% for cell in cells %}
+    {% if cell %}
+    <button type="button" class="day {{ 'is-today' if cell.es_hoy else '' }} {{ 'is-set' if cell.codigo else 'is-empty' }}"
+            data-open="dia"
+            data-fecha="{{ cell.fecha }}"
+            data-codigo="{{ cell.codigo }}"
+            {% if cell.codigo %}style="background: {{ cell.color }}; color: {{ cell.fg }}; border-color: {{ cell.color }}"{% endif %}>
+      <span class="num">{{ cell.dia }}</span>
+      <span class="who">{{ cell.nombre or "sin turno" }}</span>
+    </button>
+    {% else %}
+    <div class="day is-pad"></div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<dialog id="dia" class="modal">
+  <form method="post" action="/turnos/asignar">
+    <h3>Turno del <span id="dia-fecha-label"></span></h3>
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="mes" value="{{ mes_valor }}">
+    <input type="hidden" name="fecha" id="dia-fecha">
+    <label>Farmacia
+      <select name="farmacia_codigo" id="dia-codigo">
+        <option value="">— Quitar turno —</option>
+        {% for f in farmacias %}
+        <option value="{{ f.codigo }}">{{ f.nombre }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="row-actions">
+      <button class="btn primary" type="submit">Guardar día</button>
+      <button class="btn" type="button" data-close>Cerrar</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('[data-fecha]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('dia-fecha').value = btn.dataset.fecha;
+      document.getElementById('dia-fecha-label').textContent = btn.dataset.fecha;
+      document.getElementById('dia-codigo').value = btn.dataset.codigo || '';
+    });
+  });
+</script>
+{% endblock %}

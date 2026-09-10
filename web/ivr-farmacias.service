@@ -1,0 +1,18 @@
+[Unit]
+Description=Panel web IVR IP EMI&MAC
+After=network.target asterisk.service
+
+[Service]
+Type=simple
+User=asterisk
+Group=asterisk
+Environment=IVR_ENV=production
+Environment=TZ=America/Argentina/Buenos_Aires
+EnvironmentFile=-/etc/ivr-farmacias.env
+WorkingDirectory=/opt/ivr-farmacias/web
+ExecStart=/opt/ivr-farmacias/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8787
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

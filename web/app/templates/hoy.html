@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Hoy · {{ system_name }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">En el aire</p>
+    <h2>{{ fecha_larga }}</h2>
+  </div>
+  <form method="post" action="/hoy/publicar">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="btn primary" type="submit">Publicar ahora</button>
+  </form>
+</header>
+<p class="meta">El cambio de día es automático: a las 00:05 el cron lee el calendario del panel y publica la farmacia de hoy. No hay que entrar todos los días. Este botón es solo si acabás de cambiar el turno de hoy y querés que rija al toque.</p>
+
+<section class="hero-card"{% if turno and turno.color %} style="border-top: 8px solid {{ turno.color }}"{% endif %}>
+  {% if turno %}
+    <p class="eyebrow">Farmacia de turno</p>
+    <h3>{{ turno.nombre or turno.farmacia_codigo }}</h3>
+    <p class="meta">{{ turno.direccion or "Sin dirección cargada" }}{% if turno.telefono %} · {{ turno.telefono }}{% endif %}</p>
+    <p class="chip">código {{ turno.farmacia_codigo }}</p>
+    {% if falta_audio_hoy %}
+      <p class="banner warn">Esta farmacia no tiene audio. La llamada va a escuchar el fallback hasta que subas el WAV.</p>
+    {% elif astdb_desfasado %}
+      <p class="banner warn">El calendario de hoy ya es otro, pero Asterisk todavía tiene <code>{{ astdb }}</code> (el cron de las 00:05 no corrió o falló). Pulsá <strong>Publicar ahora</strong>.</p>
+    {% else %}
+      <audio controls src="/media/{{ turno.farmacia_codigo }}.wav"></audio>
+    {% endif %}
+  {% else %}
+    <p class="eyebrow">Sin asignación</p>
+    <h3>Hoy no hay farmacia de turno</h3>
+    <p class="meta">Cargala en el calendario. Hasta entonces el IVR reproduce el audio de fallback.</p>
+    <a class="btn primary" href="/turnos">Cargar el mes</a>
+  {% endif %}
+</section>
+
+<div class="grid-2">
+  <section class="panel">
+    <h3>Qué va a escuchar quien llame al {{ extension }}</h3>
+    <ol class="steps">
+      <li class="{{ 'is-bad' if falta_intro else 'is-ok' }}">Intro {% if falta_intro %}— falta el audio{% else %}listo{% endif %}</li>
+      <li class="{{ 'is-bad' if (not turno or falta_audio_hoy) else 'is-ok' }}">Farmacia del día</li>
+      <li class="{{ 'is-bad' if falta_fallback else 'is-ok' }}">Fallback si falta un dato</li>
+      <li class="{{ 'is-ok' if turno and turno.telefono else 'is-bad' }}">Tecla 1: desvío a la farmacia {% if turno and turno.telefono %}({{ turno.telefono }}){% else %}— cargá el teléfono en Farmacias{% endif %}</li>
+    </ol>
+    <p class="meta">AstDB ahora: <code>{{ astdb or "sin publicar / sin Asterisk en este equipo" }}</code></p>
+    <a href="/audios">Ir a audios</a>
+  </section>
+  <section class="panel">
+    <h3>Próximos días</h3>
+    {% if proximos %}
+    <ul class="upcoming">
+      {% for row in proximos %}
+      <li>
+        <span class="swatch" style="background: {{ row.color or '#2f6b54' }}"></span>
+        <span>{{ row.fecha }}</span>
+        <strong>{{ row.nombre or row.farmacia_codigo }}</strong>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="meta">No hay turnos cargados hacia adelante.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

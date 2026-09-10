@@ -1,0 +1,11 @@
+[Unit]
+Description=IVR IP EMI&MAC — diario 00:05
+Requires=ivr-farmacias-diario.service
+
+[Timer]
+OnCalendar=00:05:00
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,176 @@
+================================================================================
+  IVR IP EMI&MAC — instalación en producción
+  Issabel (CentOS 7) + Asterisk 11
+================================================================================
+
+Qué hace
+--------
+Al llamar, Asterisk reproduce la farmacia de turno del día. El calendario
+se carga en el panel web. Issabel solo manda la llamada al IVR.
+
+  Telefono / DID --> Issabel --> destino farmacia-turno,s,1
+                                 --> audio del dia
+                                 --> tecla 1 = desvio al telefono de esa farmacia
+
+  Panel http://IP-CENTRAL:8787  --> farmacias, turnos, audios
+  Timer 00:05                   --> publica el dia en Asterisk (AstDB)
+
+
+No hace falta
+-------------
+  - Otro Asterisk ni Docker
+  - Crear el interno 449700 en la GUI de Issabel (choca con el dialplan)
+  - Grupos horarios por farmacia (Issabel no maneja el año)
+
+
+Dónde queda cada cosa
+---------------------
+  Panel:          /opt/ivr-farmacias
+  Base:           /var/lib/ivr-farmacias/ivr.db
+  Claves:         /etc/ivr-farmacias.env
+  Dialplan:       /etc/asterisk/extensions_farmacias.conf
+  Scripts:        /etc/asterisk/farmacias/
+  Audios:         /var/lib/asterisk/sounds/es/farmacias/
+  Timer:          ivr-farmacias-diario.timer  (00:05)
+  Panel systemd:  ivr-farmacias.service       (puerto 8787)
+  Interno:        449700 (variable: EXTEN=... o panel Sistema)
+
+
+================================================================================
+1. Copiar el proyecto a la central
+================================================================================
+
+WinSCP / SCP, carpeta completa a:
+
+  /root/IVRIP-IVRIPE
+
+Tiene que verse: install.sh  install-centos7.sh  web  asterisk  INSTALAR.txt
+
+Transferencia binaria (el instalador igual corrige CRLF de Windows).
+
+
+================================================================================
+2. Instalar (SSH como root)
+================================================================================
+
+  cd /root/IVRIP-IVRIPE
+  bash install.sh
+
+Interno distinto (solo si 449700 esta ocupado):
+
+  EXTEN=449800 bash install.sh
+
+La primera vez puede tardar 10-20 min (compila Python 3.9 en /opt/python39).
+No usa ni reemplaza el python de Issabel.
+
+Al terminar: panel http://IP:8787  usuario admin / admin
+
+Si ya esta instalado: no reinstalar. Ver "Actualizar el panel". El timer
+00:05 de esta central ya quedo activo el 10/09/2026.
+
+
+================================================================================
+3. Issabel (GUI, una sola vez)
+================================================================================
+
+  PBX -> Destinos personalizados
+    Descripcion:  IVR IP EMI&MAC
+    Destino:      farmacia-turno,s,1
+  Aplicar cambios.
+
+  Apuntar ahi:
+    - la ruta de entrada (DID), o
+    - una tecla del IVR de Issabel, o
+    - marcar 449700 desde un interno (prueba)
+
+NO crear 449700 como extension/usuario en la GUI.
+
+
+================================================================================
+4. Panel — primer uso
+================================================================================
+
+  1) Sistema: cambiar la clave admin
+  2) Farmacias: alta (nombre, telefono como se marca desde un interno, color)
+  3) Audios: intro, fallback, un WAV por farmacia
+     Opcional: opcion1 ("para comunicarse marque 1")
+  4) Turnos: cargar el mes
+  5) Hoy -> Publicar ahora
+
+El telefono de cada farmacia tiene que ser marcable desde un interno
+(con prefijo de salida si Issabel lo pide). Tecla 1 desvia a ese numero.
+
+
+Uso mensual
+-----------
+  Cargar el mes siguiente en Turnos antes de que termine el actual.
+  Todos los dias: nada. A las 00:05 el timer publica el dia.
+  Si cambias HOY: boton Publicar ahora.
+
+
+================================================================================
+5. Comprobar
+================================================================================
+
+  bash /etc/asterisk/farmacias/verificar.sh
+  systemctl is-active ivr-farmacias
+  systemctl list-timers --all | grep ivr
+  asterisk -rx "database get farmacias hoy"
+  asterisk -rx "dialplan show farmacia-turno"
+
+Marcar 449700: intro + farmacia. Esperar y pulsar 1: llama a la farmacia.
+
+
+================================================================================
+Comandos
+================================================================================
+
+  systemctl status ivr-farmacias
+  systemctl restart ivr-farmacias
+  journalctl -u ivr-farmacias -n 50 --no-pager
+
+  systemctl status ivr-farmacias-diario.timer
+  journalctl -u ivr-farmacias-diario.service --since today --no-pager
+  bash /etc/asterisk/farmacias/actualizar_turno.sh
+  tail /var/log/ivr-farmacias.log
+
+
+================================================================================
+Actualizar el panel (sin reinstalar Issabel)
+================================================================================
+
+Copiar encima en /opt/ivr-farmacias/web/ los .py y templates nuevos.
+
+  chown -R asterisk:asterisk /opt/ivr-farmacias
+  chown asterisk:asterisk /etc/asterisk/extensions_farmacias.conf
+  systemctl restart ivr-farmacias
+
+Sistema -> Guardar interno (reescribe dialplan)
+Hoy -> Publicar ahora
+
+
+================================================================================
+Notas de esta central (Issabel / CentOS 7)
+================================================================================
+
+  - python3 del sistema no existe o es 3.6: no instalar yum install python3
+  - yum de CentOS 7 usa Vault (el instalador lo apunta)
+  - Python propio: /opt/python39  (hace falta openssl-devel para pip/https)
+  - SQLite 3.7: el panel usa INSERT OR REPLACE (no UPSERT)
+  - El dialplan tiene que ser de usuario asterisk (el panel lo reescribe)
+  - cron.d NO puede tener tildes; el timer systemd es el cambio de dia confiable
+  - OnCalendar del timer: 00:05:00 (sin asteriscos; systemd 219)
+
+
+Desarrollo en una PC (solo panel, sin Asterisk)
+-----------------------------------------------
+  cd web
+  .\run.ps1
+  http://127.0.0.1:8787
+
+
+Docker (no es el camino de esta instalacion)
+--------------------------------------------
+  Queda en el repo por si en el futuro se usa otro server. Produccion EMI&MAC
+  es Issabel nativo: bash install.sh
+================================================================================

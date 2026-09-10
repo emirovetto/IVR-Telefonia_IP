@@ -1,0 +1,10 @@
+web/data/
+web/.venv/
+web/app.rar
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.env
+*.rar
+

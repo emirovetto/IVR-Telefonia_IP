@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Farmacias · {{ system_name }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Catálogo</p>
+    <h2>Farmacias</h2>
+  </div>
+  <button class="btn primary" type="button" data-open="alta">Nueva farmacia</button>
+</header>
+
+<div class="cards">
+  {% for f in farmacias %}
+  <article class="card">
+    <div class="card-color" style="background: {{ f.color }}"></div>
+    <header>
+      <h3>{{ f.nombre }}</h3>
+      <p class="chip">{{ f.codigo }}</p>
+    </header>
+    <p class="meta">{{ f.direccion or "Sin dirección" }}{% if f.telefono %}<br>{{ f.telefono }}{% endif %}</p>
+    <p class="meta">{{ f.turnos }} día{{ 's' if f.turnos != 1 else '' }} en el cronograma · {% if f.tiene_audio %}audio listo{% else %}sin audio{% endif %}</p>
+    {% if f.tiene_audio %}
+    <audio controls src="/media/{{ f.codigo }}.wav"></audio>
+    {% endif %}
+    <div class="row-actions">
+      <button class="btn" type="button" data-open="edit-{{ f.id }}">Editar</button>
+      <form method="post" action="/farmacias/{{ f.id }}/borrar" onsubmit="return confirm('¿Borrar {{ f.nombre }} y sus turnos?')">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn danger" type="submit">Borrar</button>
+      </form>
+    </div>
+  </article>
+
+  <dialog id="edit-{{ f.id }}" class="modal">
+    <form method="post" action="/farmacias/{{ f.id }}/editar" enctype="multipart/form-data">
+      <h3>Editar {{ f.nombre }}</h3>
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Nombre <input name="nombre" value="{{ f.nombre }}" required></label>
+      <label>Dirección <input name="direccion" value="{{ f.direccion }}"></label>
+      <label>Teléfono <input name="telefono" value="{{ f.telefono }}" placeholder="como se marca desde un interno"></label>
+      <p class="hint">Si hay número, al final del anuncio el que llama puede marcar <strong>1</strong> y se desvía a este teléfono (Issabel usa sus rutas de salida).</p>
+      <label class="color-field">Color en el calendario
+        <input type="color" name="color" value="{{ f.color }}">
+      </label>
+      <label>Reemplazar audio <input type="file" name="audio_file" accept="audio/*,.wav,.mp3,.ogg,.m4a"></label>
+      <p class="hint">El código <code>{{ f.codigo }}</code> no se cambia: es el nombre del WAV en Asterisk.</p>
+      <div class="row-actions">
+        <button class="btn primary" type="submit">Guardar</button>
+        <button class="btn" type="button" data-close>Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+  {% else %}
+  <p class="empty">Todavía no hay farmacias. Creá la primera para poder armar el mes.</p>
+  {% endfor %}
+</div>
+
+<dialog id="alta" class="modal">
+  <form method="post" action="/farmacias" enctype="multipart/form-data">
+    <h3>Nueva farmacia</h3>
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Nombre <input name="nombre" required placeholder="Farmacia Central"></label>
+    <label>Dirección <input name="direccion" placeholder="San Martín 150"></label>
+    <label>Teléfono <input name="telefono" placeholder="034564213000"></label>
+    <p class="hint">Como se marca desde un teléfono de la central. El que llama, al final, puede pulsar 1 y se comunica con la farmacia.</p>
+    <label class="color-field">Color en el calendario
+      <input type="color" name="color" value="{{ siguiente_color }}">
+    </label>
+    <label>Código de audio (opcional) <input name="codigo" placeholder="farmacia_central"></label>
+    <label>Audio (nombre, dirección, teléfono) <input type="file" name="audio_file" accept="audio/*,.wav,.mp3,.ogg,.m4a"></label>
+    <p class="hint">Si dejás el código vacío se arma solo a partir del nombre. Tiene que coincidir con el archivo WAV.</p>
+    <div class="row-actions">
+      <button class="btn primary" type="submit">Crear</button>
+      <button class="btn" type="button" data-close>Cerrar</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

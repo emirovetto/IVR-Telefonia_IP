@@ -1,0 +1,10 @@
+[Unit]
+Description=IVR IP EMI&MAC — publicar farmacia de turno del dia
+After=asterisk.service network.target
+
+[Service]
+Type=oneshot
+Environment=IVR_ENV=production
+Environment=TZ=America/Argentina/Buenos_Aires
+EnvironmentFile=-/etc/ivr-farmacias.env
+ExecStart=/etc/asterisk/farmacias/actualizar_turno.sh
