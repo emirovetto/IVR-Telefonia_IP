@@ -11,7 +11,7 @@
 <div class="grid-2">
   <section class="panel">
     <h3>Interno del IVR</h3>
-    <p class="meta">Quien marque este número va a escuchar la farmacia de turno. Por defecto <strong>449700</strong>; se puede cambiar acá cuando quieras (no hace falta reinstalar).</p>
+    <p class="meta">Quien marque este interno escucha el anuncio del día. El número se elige al instalar (<code>EXTEN=...</code>) y se puede cambiar acá cuando quieras.</p>
     <form method="post" action="/sistema/extension">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <label>Número
@@ -30,7 +30,7 @@
     <p class="hint">PBX → Destinos personalizados → destino <code>farmacia-turno,s,1</code>. Después, la ruta de entrada (DID) o una opción del IVR apunta ahí.</p>
     <p class="hint">Al final del anuncio, si la farmacia de hoy tiene teléfono, el que llama puede marcar <strong>1</strong> y Issabel desvía la llamada (como si un interno marcara ese número).</p>
     <p class="hint">Grupo horario / condición horaria: solo si querés limitar <strong>cuándo</strong> se ofrece este anuncio (por ejemplo de 20:00 a 08:00). No cargues ahí los días de cada farmacia.</p>
-    <p class="hint">Con Docker: Issabel usa una troncal hacia este Asterisk. Destino Issabel 4 <code>SIP/emimac/s</code> · Issabel 5 <code>PJSIP/s@emimac</code>.</p>
+    <p class="hint">En Issabel: destino personalizado <code>farmacia-turno,s,1</code> (el nombre del contexto no se cambia). La ruta de entrada o una tecla de IVR apuntan ahí.</p>
   </section>
 
   <section class="panel">

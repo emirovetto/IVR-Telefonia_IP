@@ -144,7 +144,7 @@ ensure_python() {
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    echo "IVR IP EMI&MAC — instalar Python 3.9 (no toca el Python de Issabel)"
+    echo "IVR de turnos — instalar Python 3.9 (no toca el Python de Issabel)"
     echo
     if command -v python >/dev/null 2>&1; then
         log "python del sistema (dejarlo): $(python --version 2>&1)"

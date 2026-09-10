@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ISSABEL_HOST="${ISSABEL_HOST:?Defina ISSABEL_HOST (IP de la central Issabel)}"
-TRUNK_USER="${TRUNK_USER:-emimac}"
+TRUNK_USER="${TRUNK_USER:-ivrturnos}"
 TRUNK_SECRET="${TRUNK_SECRET:?Defina TRUNK_SECRET}"
 AMI_USER="${AMI_USER:-ivr}"
 AMI_SECRET="${AMI_SECRET:?Defina AMI_SECRET}"

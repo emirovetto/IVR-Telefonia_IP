@@ -1,13 +1,13 @@
 #!/bin/bash
-# Instala IVR IP EMI&MAC en Issabel / CentOS 7 / Asterisk 11.
+# Instala IVR de turnos en Issabel / CentOS 7 / Asterisk 11.
 #   sudo bash install-centos7.sh
-#   sudo EXTEN=449700 bash install-centos7.sh
+#   sudo EXTEN=8000 bash install-centos7.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 AST_ETC="${AST_ETC:-/etc/asterisk}"
 SOUNDS="${SOUNDS:-/var/lib/asterisk/sounds/es/farmacias}"
-EXTEN="${EXTEN:-449700}"
+EXTEN="${EXTEN:-8000}"
 WEB_DST="${WEB_DST:-/opt/ivr-farmacias}"
 WEB_PORT="${WEB_PORT:-8787}"
 PYTHON_PREFIX="${PYTHON_PREFIX:-/opt/python39}"
@@ -30,7 +30,7 @@ fi
 find "$ROOT" -type f \( -name '*.sh' -o -name '*.service' -o -name '*.timer' -o -name 'farmacias-turno' \) \
     -exec sed -i 's/\r$//' {} + 2>/dev/null || true
 
-echo "IVR IP EMI&MAC — instalación CentOS 7 / Asterisk 11 (interno ${EXTEN})"
+echo "IVR de turnos — instalación CentOS 7 / Asterisk 11 (interno ${EXTEN})"
 echo
 
 AST_VER=$(asterisk -rx "core show version" 2>/dev/null | head -n 1 || true)
@@ -88,7 +88,7 @@ fi
 if ! grep -q 'extensions_farmacias.conf' "$DEST_CONF" 2>/dev/null; then
     cat >> "$DEST_CONF" <<EOF
 
-; IVR IP EMI&MAC — farmacia de turno (no borrar: Issabel no regenera este archivo)
+; IVR de turnos — farmacia de turno (no borrar: Issabel no regenera este archivo)
 #include extensions_farmacias.conf
 EOF
     log "Agregado #include en ${DEST_CONF}"
@@ -161,6 +161,7 @@ if [[ ! -f /etc/ivr-farmacias.env ]]; then
 IVR_ADMIN_USER=admin
 IVR_ADMIN_PASSWORD=admin
 IVR_EXTEN=${EXTEN}
+IVR_SYSTEM_NAME=IVR de turnos
 IVR_SECRET=${SECRET}
 IVR_ENV=production
 IVR_PORT=${WEB_PORT}
@@ -246,7 +247,7 @@ fi
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 echo
 echo "============================================================"
-echo " Instalación terminada — IVR IP EMI&MAC"
+echo " Instalación terminada — IVR de turnos"
 echo "============================================================"
 echo "  Interno:      ${EXTEN}"
 echo "  Panel web:    http://${IP:-IP-DE-LA-CENTRAL}:${WEB_PORT}"
@@ -259,7 +260,7 @@ echo
 echo "  NO cree el interno ${EXTEN} en la GUI de Issabel."
 echo "  En Issabel, UNA VEZ:"
 echo "    PBX -> Destinos personalizados"
-echo "      Descripcion: IVR IP EMI&MAC"
+echo "      Descripcion: IVR de turnos"
 echo "      Destino:     farmacia-turno,s,1"
 echo "    Aplicar cambios."
 echo "    Ruta de entrada o tecla de IVR -> ese destino."

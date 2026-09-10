@@ -61,7 +61,7 @@ def write_dialplan(exten: str) -> Path:
 [farmacia-turno]
 exten => s,1,Goto({exten},1)
 
-exten => {exten},1,NoOp(IVR IP EMI-MAC farmacia de turno)
+exten => {exten},1,NoOp(IVR-turnos anuncio del dia)
  same => n,Set(CHANNEL(language)=es)
  same => n,Answer()
  same => n,Wait(1)
@@ -82,7 +82,7 @@ exten => {exten},1,NoOp(IVR IP EMI-MAC farmacia de turno)
  same => n(sin_dato),Playback(farmacias/fallback)
  same => n,Hangup()
 
-exten => 1,1,NoOp(IVR IP EMI-MAC desvio farmacia)
+exten => 1,1,NoOp(IVR-turnos desvio tecla 1)
  same => n,GotoIf($["${{TELEFONO}}" = ""]?nodial)
  same => n,Dial(Local/${{TELEFONO}}@from-internal/n,60)
  same => n(nodial),Hangup()

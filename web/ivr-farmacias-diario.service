@@ -1,5 +1,5 @@
 [Unit]
-Description=IVR IP EMI&MAC — publicar farmacia de turno del dia
+Description=IVR de turnos — publicar anuncio del dia
 After=asterisk.service network.target
 
 [Service]

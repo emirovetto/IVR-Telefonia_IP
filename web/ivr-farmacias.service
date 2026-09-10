@@ -1,5 +1,5 @@
 [Unit]
-Description=Panel web IVR IP EMI&MAC
+Description=Panel web IVR de turnos
 After=network.target asterisk.service
 
 [Service]

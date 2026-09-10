@@ -1,12 +1,12 @@
 #!/bin/bash
-# Instala IVR IP EMI&MAC (panel web + dialplan) en una central Asterisk.
+# Instala IVR de turnos (panel web + dialplan) en una central Asterisk.
 #   sudo bash install.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 AST_ETC="${AST_ETC:-/etc/asterisk}"
 SOUNDS="${SOUNDS:-/var/lib/asterisk/sounds/es/farmacias}"
-EXTEN="${EXTEN:-449700}"
+EXTEN="${EXTEN:-8000}"
 WEB_DST="${WEB_DST:-/opt/ivr-farmacias}"
 WEB_PORT="${WEB_PORT:-8787}"
 
@@ -29,7 +29,7 @@ if ! command -v asterisk >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "Instalando IVR IP EMI&MAC (interno ${EXTEN})..."
+echo "Instalando IVR de turnos (interno ${EXTEN})..."
 
 mkdir -p "${AST_ETC}/farmacias" "$SOUNDS" /var/lib/ivr-farmacias
 install -m 755 "${ROOT}/asterisk/farmacias/actualizar_turno.sh" "${AST_ETC}/farmacias/actualizar_turno.sh"
@@ -55,7 +55,7 @@ fi
 if ! grep -q 'extensions_farmacias.conf' "$DEST_CONF" 2>/dev/null; then
     cat >> "$DEST_CONF" <<EOF
 
-; IVR IP EMI&MAC — farmacia de turno
+; IVR de turnos — farmacia de turno
 #include extensions_farmacias.conf
 EOF
     echo "  Agregado #include en ${DEST_CONF}"
@@ -109,9 +109,11 @@ if [[ ! -f /etc/ivr-farmacias.env ]]; then
 IVR_ADMIN_USER=admin
 IVR_ADMIN_PASSWORD=admin
 IVR_EXTEN=${EXTEN}
+IVR_SYSTEM_NAME=IVR de turnos
 IVR_SECRET=${SECRET}
 IVR_ENV=production
 IVR_PORT=${WEB_PORT}
+TZ=America/Argentina/Buenos_Aires
 EOF
     chmod 640 /etc/ivr-farmacias.env
     echo "  Creado /etc/ivr-farmacias.env (usuario admin / admin — cambielo en el panel)"
@@ -141,7 +143,7 @@ bash "${AST_ETC}/farmacias/verificar.sh" || true
 
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 echo
-echo "Instalación de IVR IP EMI&MAC terminada."
+echo "Instalación de IVR de turnos terminada."
 echo "  Interno:     ${EXTEN}"
 echo "  Panel web:   http://${IP:-IP}:${WEB_PORT}"
 echo "  Usuario:     admin"

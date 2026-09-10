@@ -17,7 +17,7 @@ def _syslog(msg: str) -> None:
     try:
         import syslog
 
-        syslog.syslog(syslog.LOG_INFO, f"IVR IP EMI&MAC: {msg}")
+        syslog.syslog(syslog.LOG_INFO, f"IVR de turnos: {msg}")
     except Exception:
         pass
 

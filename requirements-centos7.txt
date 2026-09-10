@@ -1,4 +1,4 @@
-# Panel IVR IP EMI&MAC — CentOS 7 / Python 3.8 o 3.9
+# Panel IVR de turnos — CentOS 7 / Python 3.8 o 3.9
 # uvicorn sin [standard] para no compilar uvloop en glibc vieja.
 fastapi==0.115.6
 uvicorn==0.32.1

@@ -1,5 +1,5 @@
 [Unit]
-Description=IVR IP EMI&MAC — diario 00:05
+Description=IVR de turnos diario 00:05
 Requires=ivr-farmacias-diario.service
 
 [Timer]

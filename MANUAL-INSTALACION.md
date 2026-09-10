@@ -1,21 +1,14 @@
-# Manual — IVR IP EMI&MAC
+# Manual
 
-La guía de producción (Issabel / CentOS 7 / Asterisk 11) está en **[INSTALAR.txt](INSTALAR.txt)**.
+Guía de instalación: **[INSTALAR.txt](INSTALAR.txt)**  
+Qué es y cómo encaja en telefonía IP: **[README.md](README.md)**
 
-Ahí está: copiar el proyecto, `bash install.sh`, destino `farmacia-turno,s,1`, panel, timer 00:05 y tecla 1.
+Desde la central:
 
-Este archivo no duplica esos pasos para no desactualizarse.
+```bash
+git clone https://github.com/emirovetto/IVRIPE.git /opt/src/IVRIPE
+cd /opt/src/IVRIPE
+EXTEN=8000 bash install.sh
+```
 
-## Recordatorio rápido
-
-| Qué | Valor |
-|---|---|
-| Panel | `http://IP:8787` |
-| Interno | 449700 (variable; no crear en la GUI) |
-| Destino Issabel | `farmacia-turno,s,1` |
-| Diario | `ivr-farmacias-diario.timer` a las 00:05 |
-| Calendario | Panel Turnos → SQLite; no Grupos horarios |
-
-## Docker
-
-No es el despliegue de esta instalación. Si hiciera falta otro server, está `docker-compose.yml` + `.env.example`.
+Destino Issabel: `farmacia-turno,s,1`. No crear el interno en la GUI.

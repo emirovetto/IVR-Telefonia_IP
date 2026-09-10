@@ -1,5 +1,5 @@
 #!/bin/bash
-# Comprueba que IVR IP EMI&MAC esté instalado y listo para atender.
+# Comprueba que IVR de turnos esté instalado y listo para atender.
 set -u
 
 SCRIPT="/etc/asterisk/farmacias/actualizar_turno.sh"
@@ -9,7 +9,7 @@ DB="/var/lib/ivr-farmacias/ivr.db"
 PYTHON="/opt/ivr-farmacias/venv/bin/python"
 WEB="/opt/ivr-farmacias/web"
 HOY=$(date +%Y-%m-%d)
-EXTEN="${IVR_EXTEN:-449700}"
+EXTEN="${IVR_EXTEN:-8000}"
 if [[ -f /etc/ivr-farmacias.env ]]; then
     env_exten=$(grep -E '^IVR_EXTEN=' /etc/ivr-farmacias.env 2>/dev/null | tail -n 1 | cut -d= -f2- | tr -d '\r')
     [[ -n "$env_exten" ]] && EXTEN="$env_exten"
@@ -32,7 +32,7 @@ errores=0
 ok() { echo "  [OK] $1"; }
 fail() { echo "  [FALTA] $1"; errores=$((errores + 1)); }
 
-echo "Verificación IVR IP EMI&MAC — ${HOY} — interno ${EXTEN}"
+echo "Verificación IVR de turnos — ${HOY} — interno ${EXTEN}"
 echo
 
 [[ -x "$SCRIPT" ]] && ok "script diario ${SCRIPT}" || fail "script diario ${SCRIPT}"
